@@ -25,7 +25,7 @@ const SocialLink = ({ href, icon: Icon, label }: { href: string, icon: any, labe
         href={href} 
         target="_blank" 
         rel="noopener noreferrer" 
-        className="hover:text-gray-300 transition-colors"
+        className="hover:text-[#F2C94C] transition-colors"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -61,7 +61,7 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-2 text-sm md:text-right">
-          <a href="https://wa.me/916283116822" target="_blank" rel="noopener noreferrer" className="text-white font-bold hover:text-gray-200 transition-colors">Contact Us</a>
+          <a href="https://wa.me/916283116822" target="_blank" rel="noopener noreferrer" className="text-[#F2C94C] font-bold hover:text-[#F2C94C]/80 transition-colors">Contact Us</a>
           <a href="#portfolio" className="text-gray-300 hover:text-white transition-colors">Our Work</a>
           <a href="#philosophy" className="text-gray-300 hover:text-white transition-colors">About Us</a>
         </div>

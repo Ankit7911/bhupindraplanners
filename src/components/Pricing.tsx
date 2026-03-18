@@ -109,7 +109,7 @@ export default function Pricing() {
               }`}
             >
               {plan.dark && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-1 rounded-full text-xs font-bold tracking-wider shadow-lg">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#F2C94C] text-black px-4 py-1 rounded-full text-xs font-bold tracking-wider shadow-lg">
                   MOST POPULAR
                 </div>
               )}
@@ -126,10 +126,10 @@ export default function Pricing() {
               <ul className="flex-1 space-y-3 mb-8">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm">
-                    <div className="rounded-full p-0.5 mt-0.5 shrink-0 bg-white/20">
-                      <Check className="w-3 h-3" />
+                    <div className="rounded-full p-0.5 mt-0.5 shrink-0 bg-[#F2C94C]/20">
+                      <Check className="w-3 h-3 text-[#F2C94C]" />
                     </div>
-                    <span className={plan.boldFeatures?.includes(feature) ? 'font-bold' : ''}>{feature}</span>
+                    <span className={plan.boldFeatures?.includes(feature) ? 'font-bold text-[#F2C94C]' : ''}>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -140,15 +140,15 @@ export default function Pricing() {
                 rel="noopener noreferrer"
                 className={`group relative w-full py-3 rounded-xl text-sm font-medium transition-all backdrop-blur-md border overflow-hidden shadow-[inset_0_0_10px_rgba(255,255,255,0.1),0_4px_15px_rgba(0,0,0,0.1)] ${
                   plan.dark
-                    ? 'bg-white/10 border-white/50 text-white hover:bg-white/20 hover:shadow-[inset_0_0_15px_rgba(255,255,255,0.2),0_4px_20px_rgba(255,255,255,0.2)]'
-                    : 'bg-white/5 border-white/40 text-white hover:bg-white/10 hover:shadow-[inset_0_0_15px_rgba(255,255,255,0.2),0_4px_20px_rgba(255,255,255,0.15)]'
+                    ? 'bg-[#F2C94C]/10 border-[#F2C94C]/50 text-white hover:bg-[#F2C94C] hover:text-black hover:border-[#F2C94C] hover:shadow-[0_8px_32px_rgba(242,201,76,0.3)]'
+                    : 'bg-white/5 border-white/40 text-white hover:bg-[#F2C94C] hover:text-black hover:border-[#F2C94C] hover:shadow-[0_8px_32px_rgba(242,201,76,0.3)]'
                 }`}
               >
                 <div className="relative h-5 flex flex-col items-center justify-center overflow-hidden">
-                  <span className="absolute transition-all duration-500 group-hover:-translate-y-8">
+                  <span className="absolute transition-all duration-500 group-hover:-translate-y-8 text-white group-hover:text-black">
                     Know More
                   </span>
-                  <span className="absolute translate-y-8 transition-all duration-500 group-hover:translate-y-0 text-white font-bold">
+                  <span className="absolute translate-y-8 transition-all duration-500 group-hover:translate-y-0 text-black font-bold">
                     GET QUOTE
                   </span>
                 </div>

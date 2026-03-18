@@ -130,7 +130,7 @@ export default function Portfolio() {
               onClick={() => { setFilter(f); setIsExpanded(false); }}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 filter === f 
-                  ? 'bg-black text-white shadow-md' 
+                  ? 'bg-[#F2C94C] text-black shadow-md' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -196,7 +196,7 @@ export default function Portfolio() {
         >
           <button
             onClick={() => setIsExpanded(true)}
-            className="group flex items-center gap-3 px-8 py-4 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-all hover:shadow-lg hover:-translate-y-1"
+            className="group flex items-center gap-3 px-8 py-4 bg-[#F2C94C] text-black rounded-full font-bold hover:bg-[#F2C94C]/80 transition-all hover:shadow-lg hover:-translate-y-1"
           >
             View All Projects 
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

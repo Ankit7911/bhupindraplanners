@@ -99,7 +99,7 @@ export default function Hero() {
             SERVICES
           </a>
           <div className="order-3 md:order-2 w-full md:w-auto flex justify-center mt-2 md:mt-0">
-            <a href="https://wa.me/916283116822" target="_blank" rel="noopener noreferrer" className="px-8 py-3 bg-white/60 backdrop-blur-md border border-white/80 text-black rounded-full text-sm font-bold hover:bg-white/80 hover:shadow-[0_8px_32px_rgba(255,255,255,0.4)] shadow-[inset_0_0_20px_rgba(255,255,255,0.6),0_4px_30px_rgba(0,0,0,0.1)] transition-all inline-block">
+            <a href="https://wa.me/916283116822" target="_blank" rel="noopener noreferrer" className="px-8 py-3 bg-[#F2C94C]/90 backdrop-blur-md border border-[#F2C94C]/60 text-black rounded-full text-sm font-bold hover:bg-[#F2C94C] hover:shadow-[0_8px_32px_rgba(242,201,76,0.4)] shadow-[inset_0_0_20px_rgba(242,201,76,0.5),0_4px_30px_rgba(0,0,0,0.1)] transition-all inline-block">
               CONTACT US
             </a>
           </div>

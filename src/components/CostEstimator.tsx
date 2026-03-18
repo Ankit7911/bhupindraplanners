@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calculator, IndianRupee, Home, Layers, CheckCircle2, Bath, Sofa, Box, Maximize, ArrowUp, Paintbrush, Utensils, Sparkles, CarFront, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calculator, IndianRupee, Home, Layers, CheckCircle2, Bath, Sofa, Box, Maximize, ArrowUp, Paintbrush, Utensils, Sparkles, CarFront, TrendingUp, ChevronDown, ChevronUp, Map } from 'lucide-react';
 
 export default function CostEstimator() {
+  const [region, setRegion] = useState<string>('Chandigarh Region');
+  const [floors, setFloors] = useState<number>(2);
   const [builtUpArea, setBuiltUpArea] = useState<string>('');
-  const [gfRooms, setGfRooms] = useState<number>(2);
-  const [ffRooms, setFfRooms] = useState<number>(1);
+  const [floorRooms, setFloorRooms] = useState<number[]>([2, 1, 0, 0]); // Rooms for up to 4 floors
   const [roomSizeType, setRoomSizeType] = useState<'preset' | 'custom'>('preset');
   const [roomSizePreset, setRoomSizePreset] = useState<'Small' | 'Medium' | 'Big'>('Medium');
   const [roomLength, setRoomLength] = useState<string>('12');
@@ -17,7 +18,7 @@ export default function CostEstimator() {
   const [hasLobby, setHasLobby] = useState<boolean>(true);
   const [hasDrawingRoom, setHasDrawingRoom] = useState<boolean>(true);
   const [hasFamilyLounge, setHasFamilyLounge] = useState<boolean>(false);
-  const [hasPooja, setHasPooja] = useState<boolean>(false);
+  const [hasPrayerRoom, setHasPrayerRoom] = useState<boolean>(false);
   const [hasPorch, setHasPorch] = useState<boolean>(true);
   const [hasStairs, setHasStairs] = useState<boolean>(true);
   
@@ -37,15 +38,22 @@ export default function CostEstimator() {
   const [estimate, setEstimate] = useState<{ min: number; max: number; area: number } | null>(null);
 
   useEffect(() => {
+    if (floors > 1 && !hasStairs) {
+      setHasStairs(true);
+    }
+  }, [floors]);
+
+  useEffect(() => {
     calculateEstimate();
-  }, [builtUpArea, gfRooms, ffRooms, roomSizeType, roomSizePreset, roomLength, roomWidth, washrooms, kitchens, hasStore, hasLobby, hasDrawingRoom, hasFamilyLounge, hasPooja, hasPorch, hasStairs, quality, hasBasement, furnishing, complexity, customFactor]);
+  }, [region, floors, builtUpArea, floorRooms, roomSizeType, roomSizePreset, roomLength, roomWidth, washrooms, kitchens, hasStore, hasLobby, hasDrawingRoom, hasFamilyLounge, hasPrayerRoom, hasPorch, hasStairs, quality, hasBasement, furnishing, complexity, customFactor]);
 
   const calculateEstimate = () => {
     const bArea = parseFloat(builtUpArea) || 0;
     
-    const totalRooms = gfRooms + ffRooms;
+    const activeFloorRooms = floorRooms.slice(0, floors);
+    const totalRooms = activeFloorRooms.reduce((sum, r) => sum + r, 0);
     
-    if (totalRooms === 0 && bArea === 0 && !hasStore && !hasLobby && !hasDrawingRoom && !hasFamilyLounge && !hasPooja && !hasPorch && !hasStairs && kitchens === 0 && washrooms === 0) {
+    if (totalRooms === 0 && bArea === 0 && !hasStore && !hasLobby && !hasDrawingRoom && !hasFamilyLounge && !hasPrayerRoom && !hasPorch && !hasStairs && kitchens === 0 && washrooms === 0) {
       setEstimate(null);
       return;
     }
@@ -66,12 +74,12 @@ export default function CostEstimator() {
     const storeArea = hasStore ? 80 : 0;
     const lobbyArea = hasLobby ? 315 : 0;
     const loungeArea = hasFamilyLounge ? 220 : 0;
-    const poojaArea = hasPooja ? 40 : 0;
+    const prayerArea = hasPrayerRoom ? 40 : 0;
     const porchArea = hasPorch ? 220 : 0;
     const stairsArea = hasStairs ? 140 : 0;
 
     // Total functional area
-    const functionalArea = roomsArea + drawingRoomArea + washroomsArea + kitchensArea + storeArea + lobbyArea + loungeArea + poojaArea + porchArea + stairsArea;
+    const functionalArea = roomsArea + drawingRoomArea + washroomsArea + kitchensArea + storeArea + lobbyArea + loungeArea + prayerArea + porchArea + stairsArea;
     
     // Wall and circulation factor based on complexity
     const complexityFactors = {
@@ -87,6 +95,18 @@ export default function CostEstimator() {
 
     const effectiveBuiltUpArea = bArea > 0 ? bArea : calculatedArea;
 
+    // Region Multipliers
+    const regionMultipliers: Record<string, number> = {
+      'Chandigarh Region': 1.1,
+      'Ludhiana': 1.0,
+      'Ambala': 1.0,
+      'Delhi NCR': 1.15,
+      'Sirhind': 1.0,
+      'Himachal area': 1.25,
+      'Other': 1.0
+    };
+    const regionMultiplier = regionMultipliers[region] || 1.0;
+
     // Base construction rates per sq.ft (approximate current Indian market rates)
     const rates = {
       'A': { min: 2000, max: 2500 }, // Premium
@@ -96,14 +116,14 @@ export default function CostEstimator() {
 
     const baseRate = rates[quality];
     
-    let minCost = effectiveBuiltUpArea * baseRate.min;
-    let maxCost = effectiveBuiltUpArea * baseRate.max;
+    let minCost = effectiveBuiltUpArea * baseRate.min * regionMultiplier;
+    let maxCost = effectiveBuiltUpArea * baseRate.max * regionMultiplier;
 
     // Basement calculation (assuming basement is roughly the size of the ground floor)
     if (hasBasement) {
-      const gfRatio = totalRooms > 0 ? (gfRooms / totalRooms) : 0.5;
+      const gfRatio = totalRooms > 0 ? (floorRooms[0] / totalRooms) : 0.5;
       const basementArea = effectiveBuiltUpArea * gfRatio;
-      const basementRate = 1000; // Approx rate for basement
+      const basementRate = 1000 * regionMultiplier; // Approx rate for basement
       minCost += basementArea * basementRate;
       maxCost += basementArea * (basementRate + 200);
     }
@@ -167,7 +187,7 @@ export default function CostEstimator() {
     if (hasLobby) additionalSpaces.push("Lobby");
     if (hasDrawingRoom) additionalSpaces.push("Drawing Room");
     if (hasFamilyLounge) additionalSpaces.push("Family Lounge");
-    if (hasPooja) additionalSpaces.push("Pooja Room");
+    if (hasPrayerRoom) additionalSpaces.push("Prayer Room");
     if (hasPorch) additionalSpaces.push("Porch / Parking");
     if (hasStairs) additionalSpaces.push("Staircase");
 
@@ -176,9 +196,11 @@ export default function CostEstimator() {
 
     const message = `Hi, I would like to get a detailed quote for my construction project. Here are my requirements:
 
+*Location:* ${region}
+
 *Floor Plan:*
-${plotArea ? `- Plot Area: ${plotArea} sq.ft ${plotLength && plotWidth ? `(${plotLength}x${plotWidth} ft)` : ''}\n` : ''}- Ground Floor Rooms: ${gfRooms}
-- First Floor Rooms: ${ffRooms}
+${plotArea ? `- Plot Area: ${plotArea} sq.ft ${plotLength && plotWidth ? `(${plotLength}x${plotWidth} ft)` : ''}\n` : ''}- Total Floors: ${floors}
+${floorRooms.slice(0, floors).map((r, i) => `- Floor ${i === 0 ? 'G' : i}: ${r} Rooms`).join('\n')}
 - Approx. Room Size: ${roomSizeText}
 - Washrooms: ${washrooms}
 - Kitchens: ${kitchens}
@@ -245,37 +267,68 @@ Please let me know the next steps!`;
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* Ground Floor Rooms */}
-            <div className="space-y-2">
+            {/* Region Selection */}
+            <div className="space-y-2 md:col-span-2">
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                <Home className="w-4 h-4 text-[#F2C94C]" /> Ground Floor Rooms
+                <Map className="w-4 h-4 text-[#F2C94C]" /> Select Region / Area
               </label>
-              <select 
-                value={gfRooms}
-                onChange={(e) => setGfRooms(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#F2C94C] focus:ring-2 focus:ring-[#F2C94C]/20 transition-all outline-none bg-white"
-              >
-                {[0, 1, 2, 3, 4, 5, 6].map(num => (
-                  <option key={`gf-${num}`} value={num}>{num} {num === 1 ? 'Room' : 'Rooms'}</option>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {['Chandigarh Region', 'Ludhiana', 'Ambala', 'Delhi NCR', 'Sirhind', 'Himachal area', 'Other'].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRegion(r)}
+                    className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
+                      region === r ? 'border-[#F2C94C] bg-[#F2C94C]/10 text-gray-900 shadow-sm' : 'border-gray-200 text-gray-500 hover:border-[#F2C94C]/50'
+                    }`}
+                  >
+                    {r}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
-            {/* First Floor Rooms */}
-            <div className="space-y-2">
+            {/* Number of Floors */}
+            <div className="space-y-2 md:col-span-2">
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                <ArrowUp className="w-4 h-4 text-[#F2C94C]" /> First Floor Rooms
+                <Layers className="w-4 h-4 text-[#F2C94C]" /> Number of Floors
               </label>
-              <select 
-                value={ffRooms}
-                onChange={(e) => setFfRooms(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#F2C94C] focus:ring-2 focus:ring-[#F2C94C]/20 transition-all outline-none bg-white"
-              >
-                {[0, 1, 2, 3, 4, 5, 6].map(num => (
-                  <option key={`ff-${num}`} value={num}>{num} {num === 1 ? 'Room' : 'Rooms'}</option>
+              <div className="flex gap-2 sm:gap-3">
+                {[1, 2, 3, 4].map((num) => (
+                  <button
+                    key={`floor-${num}`}
+                    onClick={() => setFloors(num)}
+                    className={`flex-1 py-3 rounded-xl border font-bold transition-all text-sm sm:text-base ${
+                      floors === num ? 'border-[#F2C94C] bg-[#F2C94C]/10 text-gray-900 shadow-sm' : 'border-gray-200 text-gray-500 hover:border-[#F2C94C]/50'
+                    }`}
+                  >
+                    {num === 1 ? 'G' : `G+${num - 1}`}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
+
+            {/* Dynamic Floor Rooms */}
+            {Array.from({ length: floors }).map((_, i) => (
+              <div key={`floor-input-${i}`} className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                  {i === 0 ? <Home className="w-4 h-4 text-[#F2C94C]" /> : <ArrowUp className="w-4 h-4 text-[#F2C94C]" />} 
+                  {i === 0 ? 'Ground Floor (G)' : i === 1 ? 'First Floor (G+1)' : i === 2 ? 'Second Floor (G+2)' : 'Third Floor (G+3)'} Rooms
+                </label>
+                <select 
+                  value={floorRooms[i]}
+                  onChange={(e) => {
+                    const newRooms = [...floorRooms];
+                    newRooms[i] = Number(e.target.value);
+                    setFloorRooms(newRooms);
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#F2C94C] focus:ring-2 focus:ring-[#F2C94C]/20 transition-all outline-none bg-white"
+                >
+                  {[0, 1, 2, 3, 4, 5, 6].map(num => (
+                    <option key={`f${i}-${num}`} value={num}>{num} {num === 1 ? 'Room' : 'Rooms'}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
 
             {/* Room Size */}
             <div className="space-y-3">
@@ -420,15 +473,15 @@ Please let me know the next steps!`;
                 </button>
 
                 <button
-                  onClick={() => setHasPooja(!hasPooja)}
+                  onClick={() => setHasPrayerRoom(!hasPrayerRoom)}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                    hasPooja ? 'border-[#F2C94C] bg-[#F2C94C]/10 text-gray-900 shadow-sm' : 'border-gray-200 text-gray-500 hover:border-[#F2C94C]/50'
+                    hasPrayerRoom ? 'border-[#F2C94C] bg-[#F2C94C]/10 text-gray-900 shadow-sm' : 'border-gray-200 text-gray-500 hover:border-[#F2C94C]/50'
                   }`}
                 >
-                  <div className={`p-2 rounded-lg ${hasPooja ? 'bg-[#F2C94C] text-black' : 'bg-gray-100 text-gray-400'}`}>
+                  <div className={`p-2 rounded-lg ${hasPrayerRoom ? 'bg-[#F2C94C] text-black' : 'bg-gray-100 text-gray-400'}`}>
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <span className="font-bold text-sm">Pooja Room</span>
+                  <span className="font-bold text-sm">Prayer Room</span>
                 </button>
 
                 <button
@@ -445,14 +498,14 @@ Please let me know the next steps!`;
 
                 <button
                   onClick={() => setHasStairs(!hasStairs)}
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                  className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl border transition-all text-left ${
                     hasStairs ? 'border-[#F2C94C] bg-[#F2C94C]/10 text-gray-900 shadow-sm' : 'border-gray-200 text-gray-500 hover:border-[#F2C94C]/50'
                   }`}
                 >
-                  <div className={`p-2 rounded-lg ${hasStairs ? 'bg-[#F2C94C] text-black' : 'bg-gray-100 text-gray-400'}`}>
-                    <TrendingUp className="w-4 h-4" />
+                  <div className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${hasStairs ? 'bg-[#F2C94C] text-black' : 'bg-gray-100 text-gray-400'}`}>
+                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 h-4" />
                   </div>
-                  <span className="font-bold text-sm">Staircase</span>
+                  <span className="font-bold text-[10px] sm:text-sm leading-tight">Staircase</span>
                 </button>
               </div>
             </div>
@@ -559,17 +612,19 @@ Please let me know the next steps!`;
             </div>
 
             {/* Basement Toggle */}
-            <div className="space-y-2 md:col-span-2 flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-              <div>
-                <label className="font-bold text-gray-900 block">Include Basement?</label>
-                <span className="text-xs text-gray-500">Adds extra cost for excavation and retaining walls</span>
+            <div className="space-y-3 md:col-span-2 p-4 border border-gray-200 rounded-xl bg-gray-50/50">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <label className="font-bold text-gray-900 block text-sm sm:text-base">Include Basement?</label>
+                  <span className="text-[10px] sm:text-xs text-gray-500 leading-tight block">Adds extra cost for excavation and retaining walls</span>
+                </div>
+                <button 
+                  onClick={() => setHasBasement(!hasBasement)}
+                  className={`w-12 h-6 sm:w-14 sm:h-8 rounded-full transition-colors relative shrink-0 ${hasBasement ? 'bg-[#F2C94C]' : 'bg-gray-300'}`}
+                >
+                  <div className={`w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full absolute top-1 transition-all ${hasBasement ? 'left-7 sm:left-7' : 'left-1'}`} />
+                </button>
               </div>
-              <button 
-                onClick={() => setHasBasement(!hasBasement)}
-                className={`w-14 h-8 rounded-full transition-colors relative ${hasBasement ? 'bg-[#F2C94C]' : 'bg-gray-300'}`}
-              >
-                <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all ${hasBasement ? 'left-7' : 'left-1'}`} />
-              </button>
             </div>
 
             {/* Area Override */}
@@ -665,6 +720,14 @@ Please let me know the next steps!`;
                     </div>
                   </div>
                 )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Region:</span>
+                  <span className="font-bold">{region}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Total Floors:</span>
+                  <span className="font-bold">{floors}</span>
+                </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Est. Built-up Area:</span>
                   <span className="font-bold">{estimate.area.toFixed(0)} sq.ft</span>
