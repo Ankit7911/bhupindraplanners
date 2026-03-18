@@ -21,6 +21,9 @@ export default function CostEstimator() {
   const [hasPorch, setHasPorch] = useState<boolean>(true);
   const [hasStairs, setHasStairs] = useState<boolean>(true);
   
+  const [complexity, setComplexity] = useState<'Simple' | 'Standard' | 'Complex' | 'Very Complex' | 'Custom'>('Standard');
+  const [customFactor, setCustomFactor] = useState<number>(10);
+  
   const [quality, setQuality] = useState<'A' | 'B' | 'C'>('B');
   const [hasBasement, setHasBasement] = useState<boolean>(false);
   const [furnishing, setFurnishing] = useState<'None' | 'Interior' | 'Furnished'>('None');
@@ -35,7 +38,7 @@ export default function CostEstimator() {
 
   useEffect(() => {
     calculateEstimate();
-  }, [builtUpArea, gfRooms, ffRooms, roomSizeType, roomSizePreset, roomLength, roomWidth, washrooms, kitchens, hasStore, hasLobby, hasDrawingRoom, hasFamilyLounge, hasPooja, hasPorch, hasStairs, quality, hasBasement, furnishing]);
+  }, [builtUpArea, gfRooms, ffRooms, roomSizeType, roomSizePreset, roomLength, roomWidth, washrooms, kitchens, hasStore, hasLobby, hasDrawingRoom, hasFamilyLounge, hasPooja, hasPorch, hasStairs, quality, hasBasement, furnishing, complexity, customFactor]);
 
   const calculateEstimate = () => {
     const bArea = parseFloat(builtUpArea) || 0;
@@ -70,8 +73,17 @@ export default function CostEstimator() {
     // Total functional area
     const functionalArea = roomsArea + drawingRoomArea + washroomsArea + kitchensArea + storeArea + lobbyArea + loungeArea + poojaArea + porchArea + stairsArea;
     
-    // Add 10% for walls and circulation (corridors, etc.)
-    const calculatedArea = functionalArea * 1.1;
+    // Wall and circulation factor based on complexity
+    const complexityFactors = {
+      'Simple': 1.08,
+      'Standard': 1.10,
+      'Complex': 1.15,
+      'Very Complex': 1.20,
+      'Custom': 1 + (customFactor / 100)
+    };
+    
+    const factor = complexityFactors[complexity];
+    const calculatedArea = functionalArea * factor;
 
     const effectiveBuiltUpArea = bArea > 0 ? bArea : calculatedArea;
 
@@ -176,6 +188,7 @@ ${plotArea ? `- Plot Area: ${plotArea} sq.ft ${plotLength && plotWidth ? `(${plo
 
 *Construction Details:*
 - Quality Class: Class ${quality}
+- Building Complexity: ${complexity}${complexity === 'Custom' ? ` (${customFactor}%)` : ''}
 - Interior & Furnishing: ${furnishing}
 - Basement: ${hasBasement ? 'Yes' : 'No'}
 ${builtUpArea ? `- Custom Built-up Area: ${builtUpArea} sq.ft\n` : ''}*Estimates:*
@@ -444,6 +457,51 @@ Please let me know the next steps!`;
               </div>
             </div>
 
+            {/* Building Complexity */}
+            <div className="space-y-3 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                  <Layers className="w-4 h-4 text-[#F2C94C]" /> Building Complexity
+                </label>
+                <span className="text-xs font-bold text-[#F2C94C] bg-[#F2C94C]/10 px-2 py-1 rounded-full">
+                  Wall & Circ. Factor: {complexity === 'Custom' ? `${customFactor}%` : `${Math.round((({ 'Simple': 1.08, 'Standard': 1.10, 'Complex': 1.15, 'Very Complex': 1.20, 'Custom': 1 }[complexity]) - 1) * 100)}%`}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {(['Simple', 'Standard', 'Complex', 'Very Complex', 'Custom'] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setComplexity(c)}
+                    className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all ${
+                      complexity === c ? 'border-[#F2C94C] bg-[#F2C94C]/10 text-gray-900' : 'border-gray-200 text-gray-500 hover:border-[#F2C94C]/50'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+              {complexity === 'Custom' && (
+                <div className="pt-2">
+                  <input 
+                    type="range" 
+                    min="5" 
+                    max="30" 
+                    step="1"
+                    value={customFactor}
+                    onChange={(e) => setCustomFactor(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#F2C94C]"
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                    <span>Min (5%)</span>
+                    <span>Max (30%)</span>
+                  </div>
+                </div>
+              )}
+              <p className="text-[10px] text-gray-400 italic">
+                *Adjusts the percentage of area added for walls, corridors, and circulation. Complex layouts require more space for these elements.
+              </p>
+            </div>
+
             {/* Quality of Construction */}
             <div className="space-y-3 md:col-span-2">
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
@@ -610,6 +668,10 @@ Please let me know the next steps!`;
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Est. Built-up Area:</span>
                   <span className="font-bold">{estimate.area.toFixed(0)} sq.ft</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Complexity:</span>
+                  <span className="font-bold">{complexity} ({complexity === 'Custom' ? `${customFactor}%` : `${Math.round((({ 'Simple': 1.08, 'Standard': 1.10, 'Complex': 1.15, 'Very Complex': 1.20, 'Custom': 1 }[complexity]) - 1) * 100)}%`})</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Quality Class:</span>
